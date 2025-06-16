@@ -41,16 +41,18 @@
                             </div>
                             <div>
                                 @auth
-                                    <a href="{{ route('events.edit', $event) }}" class="btn btn-warning me-2">
-                                        <i class="bi bi-pencil"></i> Редактировать
-                                    </a>
-                                    <form action="{{ route('events.destroy', $event) }}" method="POST" class="d-inline-block">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="btn btn-danger" onclick="return confirm('Вы уверены?');">
-                                            <i class="bi bi-trash"></i> Удалить
-                                        </button>
-                                    </form>
+                                    @if(auth()->user()->is_admin)
+                                        <a href="{{ route('events.edit', $event) }}" class="btn btn-warning me-2">
+                                            <i class="bi bi-pencil"></i> Редактировать
+                                        </a>
+                                        <form action="{{ route('events.destroy', $event) }}" method="POST" class="d-inline-block">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn btn-danger" onclick="return confirm('Вы уверены?');">
+                                                <i class="bi bi-trash"></i> Удалить
+                                            </button>
+                                        </form>
+                                    @endif
 
                                     @if (auth()->user()->hasFavorited($event))
                                         <form action="{{ route('events.unfavorite', $event) }}" method="POST" class="d-inline-block">

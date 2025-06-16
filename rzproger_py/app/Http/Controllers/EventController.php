@@ -10,6 +10,12 @@ use Carbon\Carbon;
 
 class EventController extends Controller
 {
+    public function __construct()
+    {
+        // Apply admin middleware to admin-only actions
+        $this->middleware('admin')->only(['create', 'store', 'edit', 'update', 'destroy']);
+    }
+
     /**
      * Показать список всех мероприятий.
      */
@@ -47,6 +53,9 @@ class EventController extends Controller
      */
     public function create()
     {
+        if (!Auth::user()->is_admin) {
+            abort(403, 'Unauthorized action.');
+        }
         return view('events.form');
     }
 
@@ -55,6 +64,10 @@ class EventController extends Controller
      */
     public function store(Request $request)
     {
+        if (!Auth::user()->is_admin) {
+            abort(403, 'Unauthorized action.');
+        }
+
         $validated = $request->validate([
             'title' => 'required|max:255',
             'description' => 'required',
@@ -103,6 +116,10 @@ class EventController extends Controller
      */
     public function edit(Event $event)
     {
+        if (!Auth::user()->is_admin) {
+            abort(403, 'Unauthorized action.');
+        }
+
         // Преобразуем start_datetime обратно в дату и время для формы
         $event->start_date = $event->start_datetime->format('Y-m-d');
         $event->start_time = $event->start_datetime->format('H:i');
@@ -115,6 +132,10 @@ class EventController extends Controller
      */
     public function update(Request $request, Event $event)
     {
+        if (!Auth::user()->is_admin) {
+            abort(403, 'Unauthorized action.');
+        }
+
         $validated = $request->validate([
             'title' => 'required|max:255',
             'description' => 'required',
@@ -160,6 +181,10 @@ class EventController extends Controller
      */
     public function destroy(Event $event)
     {
+        if (!Auth::user()->is_admin) {
+            abort(403, 'Unauthorized action.');
+        }
+
         // Удаляем изображение, если оно существует
         if ($event->image_path) {
             Storage::disk('public')->delete($event->image_path);

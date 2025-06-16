@@ -7,7 +7,9 @@
             </div>
             <div class="col-md-4 text-md-end">
                 @auth
-                    <a href="{{ route('events.create') }}" class="btn btn-primary">Создать мероприятие</a>
+                    @if(auth()->user()->is_admin)
+                        <a href="{{ route('events.create') }}" class="btn btn-primary">Создать мероприятие</a>
+                    @endif
                 @endauth
             </div>
         </div>
@@ -103,7 +105,9 @@
                             <div class="alert alert-info">
                                 Мероприятия не найдены. 
                                 @auth
-                                    <a href="{{ route('events.create') }}">Создать мероприятие</a>
+                                    @if(auth()->user()->is_admin)
+                                        <a href="{{ route('events.create') }}">Создать мероприятие</a>
+                                    @endif
                                 @endauth
                             </div>
                         </div>

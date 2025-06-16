@@ -10,9 +10,15 @@
         </div>
     </div>
 
+    @if (session('error'))
+        <div class="alert alert-danger">
+            {{ session('error') }}
+        </div>
+    @endif
+
     <div class="card">
         <div class="card-body">
-            <form method="POST" action="{{ route('admin.users.update', $user) }}">
+            <form method="POST" action="{{ route('admin.users.update', $user) }}" id="userForm">
                 @csrf
                 @method('PUT')
 
@@ -58,6 +64,8 @@
                                     Внимание! Вы редактируете свою учетную запись. Снятие прав администратора приведет к потере доступа к админ-панели.
                                 </div>
                             @endif
+
+                            <div id="statusMessage" class="alert mt-3" style="display: none;"></div>
                         </div>
                     </div>
                 </div>
@@ -69,4 +77,57 @@
             </form>
         </div>
     </div>
-@endsection 
+@endsection
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('userForm');
+    const statusMessage = document.getElementById('statusMessage');
+    const adminCheckbox = document.getElementById('is_admin');
+    const isCurrentUser = {{ $user->id === auth()->id() ? 'true' : 'false' }};
+
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        // Проверка на снятие прав у самого себя
+        if (isCurrentUser && !adminCheckbox.checked) {
+            statusMessage.className = 'alert alert-danger mt-3';
+            statusMessage.style.display = 'block';
+            statusMessage.textContent = 'Вы не можете снять права администратора у самого себя.';
+            return;
+        }
+
+        // Отправка AJAX запроса
+        fetch(form.action, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({
+                _method: 'PUT',
+                is_admin: adminCheckbox.checked
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            statusMessage.className = `alert alert-${data.success ? 'success' : 'danger'} mt-3`;
+            statusMessage.style.display = 'block';
+            statusMessage.textContent = data.message;
+
+            if (data.success) {
+                // Обновляем чекбокс в соответствии с новым статусом
+                adminCheckbox.checked = data.is_admin;
+            }
+        })
+        .catch(error => {
+            statusMessage.className = 'alert alert-danger mt-3';
+            statusMessage.style.display = 'block';
+            statusMessage.textContent = 'Произошла ошибка при обновлении статуса.';
+        });
+    });
+});
+</script>
+@endpush 

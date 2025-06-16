@@ -231,18 +231,42 @@ class AdminController extends Controller
      *
      * @param  \Illuminate\Http\Request  $request
      * @param  \App\Models\User  $user
-     * @return \Illuminate\Http\RedirectResponse
+     * @return \Illuminate\Http\Response
      */
     public function updateUser(Request $request, User $user)
     {
-        $validated = $request->validate([
-            'is_admin' => 'nullable|boolean',
-        ]);
-        
+        // Проверяем, не пытается ли админ снять права у самого себя
+        if ($user->id === auth()->id() && !$request->has('is_admin')) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Вы не можете снять права администратора у самого себя.',
+                    'is_admin' => true
+                ]);
+            }
+            return redirect()
+                ->back()
+                ->with('error', 'Вы не можете снять права администратора у самого себя.');
+        }
+
+        // Обновляем статус администратора
         $user->is_admin = $request->has('is_admin');
         $user->save();
+
+        $status = $user->is_admin ? 'назначен администратором' : 'больше не является администратором';
+        $message = "Пользователь {$user->name} {$status}.";
         
-        return redirect()->route('admin.users')->with('success', 'Статус администратора пользователя успешно обновлен!');
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => $message,
+                'is_admin' => $user->is_admin
+            ]);
+        }
+
+        return redirect()
+            ->route('admin.users')
+            ->with('success', $message);
     }
 
     /**
